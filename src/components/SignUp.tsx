@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import Modal from './Model';
+import { useNavigate } from 'react-router-dom';
 
-const SignUp = () => {
+const SignUp: React.FC<any> = () => {
   const [formData, setFormData] = useState({
     email: '',
     passWord: '',
@@ -17,6 +18,7 @@ const SignUp = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevData) => ({
@@ -81,11 +83,15 @@ const SignUp = () => {
         });
         setModalMessage(`Registration failed:\n${errorMessages}`);
         setShowModal(true);
-        return; // Exit early if there are errors
+        return;
       }
       if (data.status === 201) {
         setModalMessage('Registration successful');
-        setShowModal(true); // Show success modal
+        setShowModal(true);
+        setLocalStorage(data)
+        setTimeout(() => {
+          navigate('/otp'); // Replace with the route path for the OTP page
+        }, 2000);
       }
       if (data?.status == 409) {
         setModalMessage(`${data?.message}`);
@@ -102,6 +108,12 @@ const SignUp = () => {
   const closeModal = () => {
     setShowModal(false); // Close modal when the user clicks close
   };
+
+  const setLocalStorage = (data: any) => {
+    localStorage.setItem("user", JSON.stringify({
+      userId: data?.id
+    }));
+  }
 
   return (
     <div>

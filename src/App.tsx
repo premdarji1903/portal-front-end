@@ -1,16 +1,16 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import SignUp from './components/SignUp'
-
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import OTPVerification from './components/OTPVerification'
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
-    <>
-      <SignUp />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<SignUp />} />
+        <Route path="/otp" element={<OTPVerification />} />
+      </Routes>
+    </Router>
   )
 }
 
