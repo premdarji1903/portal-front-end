@@ -1,0 +1,72 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+body {
+  background: linear-gradient(to bottom right, #005f6b, #00b4d8, #0077b6, #90e0ef, #000000);
+  color: #ffffff;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  /* Set modal box color to black */
+  padding: 20px;
+  border-radius: 5px;
+  width: 300px;
+  text-align: center;
+  color: black;
+  /* Set message text color to white */
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+.spinner {
+  border: 8px solid #f3f3f3;
+  /* Light grey color for the other borders */
+  border-top: 8px solid #3498db;
+  /* Blue color for the top border */
+  border-radius: 50%;
+  width: 96px;
+  /* Wider spinner */
+  height: 96px;
+  /* Matching height */
+  animation: spin 1.5s linear infinite;
+  /* Adjust animation speed */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
