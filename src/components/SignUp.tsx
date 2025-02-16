@@ -19,7 +19,7 @@ const SignUp: React.FC<any> = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -27,7 +27,7 @@ const SignUp: React.FC<any> = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     const inputData = {
       confirmPassword: formData.confirmPassword,
