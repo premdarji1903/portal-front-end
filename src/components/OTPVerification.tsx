@@ -44,7 +44,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
         setResendVisible(false); // Hide Resend button during countdown
 
         try {
-            const response = await axios.post(
+            await axios.post(
                 'http://127.0.0.1:4000/api/resend-otp',
                 { userId },
                 { headers: { 'Content-Type': 'application/json' } }
@@ -135,7 +135,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
                 setModalMessage('OTP verified successfully!');
                 setShowModal(true);
                 setTimeout(() => {
-                    navigate('/'); // Redirect after successful OTP verification
+                    navigate('/login');
                 }, 2000);
             } else {
                 setModalMessage(`${data.message}`);

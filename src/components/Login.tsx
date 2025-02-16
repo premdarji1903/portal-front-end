@@ -65,7 +65,7 @@ const Login: React.FC<any> = () => {
                 setShowModal(true);
                 setLocalStorage(data);
                 setTimeout(() => {
-                    // navigate('/dashboard'); // Redirect to dashboard
+                    navigate('/'); 
                 }, 2000);
             } else {
                 setModalMessage(`${data?.message}`);
