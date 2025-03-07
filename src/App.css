@@ -1,72 +1,46 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-body {
-  background: linear-gradient(to bottom right, #005f6b, #00b4d8, #0077b6, #90e0ef, #000000);
-  color: #ffffff;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+/* === Full-Screen Layout === */
+.container {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  background: white;
 }
 
-.modal-content {
+.signup {
+  width: 100%;
+  max-width: 600px;
   background-color: white;
-  /* Set modal box color to black */
   padding: 20px;
-  border-radius: 5px;
-  width: 300px;
-  text-align: center;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  /* Light mode border */
+  box-shadow: 0 4px 10px rgba(44, 14, 14, 0.473);
+}
+
+/* === Dark Mode Styling === */
+.dark .signup {
+  background-color: #1f2937;
+  border: 2px solid #4b5563;
+  /* Dark mode border */
+}
+
+/* === Input Field Styling === */
+.input-field {
+  background-color: #f8f8f8;
   color: black;
-  /* Set message text color to white */
-}
-
-button {
-  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
   padding: 10px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
+  font-size: 14px;
 }
 
-button:hover {
-  background-color: #45a049;
-}
-
-.spinner {
-  border: 8px solid #f3f3f3;
-  /* Light grey color for the other borders */
-  border-top: 8px solid #3498db;
-  /* Blue color for the top border */
-  border-radius: 50%;
-  width: 96px;
-  /* Wider spinner */
-  height: 96px;
-  /* Matching height */
-  animation: spin 1.5s linear infinite;
-  /* Adjust animation speed */
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+/* === Button Styling === */
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
 }
