@@ -3,6 +3,7 @@ import axios from "axios";
 import Modal from "./Model";
 import { useNavigate } from "react-router-dom";
 import Spinner from "./Spinner";
+import { VITE_APP_URL } from "../common";
 
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -57,7 +58,7 @@ const SignUp: React.FC = () => {
   `;
 
     try {
-      const response = await axios.post("http://127.0.0.1:4001/api", { query }, {
+      const response = await axios.post(VITE_APP_URL, { query }, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -72,8 +73,6 @@ const SignUp: React.FC = () => {
       if (data?.status === 201) {
         setModalMessage("Registration successful!");
         setShowModal(true);
-        localStorage.setItem("user", JSON.stringify({ userId: data?.id }));
-
         setTimeout(() => navigate("/otp"), 2000);
       } else if (data?.status === 409) {
         setModalMessage(data?.message);

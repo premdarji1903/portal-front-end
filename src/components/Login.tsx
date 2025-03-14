@@ -3,6 +3,7 @@ import axios from 'axios';
 import Modal from './Model';
 import Spinner from './Spinner';
 import { useNavigate } from 'react-router-dom';
+import { callAPI, roleEnum } from '../api-call';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ userName: '', passWord: '' });
@@ -16,30 +17,75 @@ const Login: React.FC = () => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const fetchSessionData = async (maxRetries = 3, delay = 2000, token: string) => {
+    let retries = 0;
+    const sessionQuery = `
+      query {
+        AUTH_SVC_AUTH_SVC_getSessionById(input: {id: "${token}"}) {
+          userData {
+            contactNumber
+            email
+            firstName
+            gender
+            id
+            lastName
+            role
+            userId
+          }
+          status
+          message
+          error
+        }
+      }
+    `;
+
+    while (retries < maxRetries) {
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        let response = await callAPI(sessionQuery, headers);
+
+        let getSessionData = response.data?.data?.AUTH_SVC_AUTH_SVC_getSessionById;
+
+        if (getSessionData?.userData) {
+          localStorage.setItem("userData", JSON.stringify(getSessionData?.userData));
+          return getSessionData?.userData;
+        }
+
+        throw new Error("Invalid session data");
+      } catch (error) {
+        console.error(`Retry ${retries + 1} failed:`, error);
+        retries++;
+        if (retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          console.error("Max retries reached. Failed to fetch session data.");
+        }
+      }
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     const query = `
-    mutation {
-      AUTH_SVC_AUTH_SVC_login(input: {
-        userName: "${formData.userName}",
-        passWord: "${formData.passWord}"
-      }) {
-        error
-        token
-        message
-        status
+      mutation {
+        AUTH_SVC_AUTH_SVC_login(input: {
+          userName: "${formData.userName}",
+          passWord: "${formData.passWord}"
+        }) {
+          error
+          token
+          message
+          status
+        }
       }
-    }
-  `;
-
+    `;
 
     try {
-      const response = await axios.post("http://127.0.0.1:4001/api", { query }, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-
+      const headers = { 'Content-Type': 'application/json' };
+      const response = await callAPI(query, headers);
       const data = response.data?.data?.AUTH_SVC_AUTH_SVC_login;
 
       if (response.data.errors) {
@@ -48,11 +94,21 @@ const Login: React.FC = () => {
         return;
       }
 
-      if (data?.status === 200) {
+      if (data?.token) {
         setModalMessage('Login successful');
         setShowModal(true);
-        localStorage.setItem("user", JSON.stringify({ token: data?.token }));
-        setTimeout(() => navigate('/dashboard'), 2000);
+
+        const userData = await fetchSessionData(3, 2000, data?.token);
+
+        if (!userData) {
+          setModalMessage('Failed to retrieve user data after login.');
+          setShowModal(true);
+          return;
+        }
+
+        setTimeout(() => {
+          navigate(userData.role === roleEnum.ADMIN ? '/user-list' : '/dashboard');
+        }, 2000);
       } else {
         setModalMessage(data?.message || 'Login failed');
         setShowModal(true);
@@ -90,7 +146,6 @@ const Login: React.FC = () => {
         </div>
       )}
     </div>
-
   );
 };
 

@@ -3,6 +3,7 @@ import axios from 'axios';
 import Modal from './Model';
 import Spinner from './Spinner';
 import { useNavigate } from 'react-router-dom';
+import { callAPI } from '../api-call';
 
 interface OTPVerificationProps {
     userId?: string;
@@ -73,7 +74,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
         const query = `mutation { AUTH_SVC_AUTH_SVC_otpVerify(input: {id: "${userId}", otp: ${parseInt(otpCode, 10)}}) { error message status }}`;
         setLoading(true);
         try {
-            const response = await axios.post('http://127.0.0.1:4001/api', { query }, { headers: { 'Content-Type': 'application/json' } });
+            const headers = { 'Content-Type': 'application/json' }
+            const response = await callAPI(query, headers);
             const data = response.data.data.AUTH_SVC_AUTH_SVC_otpVerify;
             if (response.data.errors?.length) {
                 setModalMessage(`Verification failed:\n${response.data.errors.map((error: any) => error.message).join('\n')}`);
@@ -123,7 +125,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
                         className="w-full flex items-center justify-center bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-300 border border-gray-400"
                         disabled={loading}
                     >
-                       Verify OTP
+                        Verify OTP
                     </button>
                 </form>
                 <div className="text-sm text-gray-600 mt-4 text-center">
