@@ -1,50 +1,85 @@
-import React from "react";
-// import { useNavigate } from "react-router-dom";
-import { FaUserCircle, FaCog, FaSignOutAlt } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import Navigation from "./Navigation";
+import { callAPI } from "../api-call";
 
 const Dashboard: React.FC = () => {
-    // const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const [userData, setUserData] = useState<any>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-    //   // Logout Handler
-    const handleLogout = () => {
-        //     localStorage.removeItem("user");
-        //     navigate("/login");
-    };
+    // Retrieve session token from local storage
+    const sessionToken: any = localStorage.getItem("userData");
+    // console.log(JSON.parse(sessionToken)?.id)
+    const token = JSON.parse(sessionToken)?.id
+    const userId = JSON.parse(sessionToken)?.userId
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!token) {
+                setError("Unauthorized: No session token found");
+                setLoading(false);
+                return;
+            }
+
+            const query = `
+                query MyQuery {
+                    AUTH_SVC_AUTH_SVC_getUserDetailsById(input: { id: "${userId}" }) {
+                        error
+                        message
+                        status
+                        user {
+                            contactNumber
+                            email
+                            gender
+                            id
+                            firstName
+                            lastName
+                            role
+                            userId
+                        }
+                    }
+                }
+            `;
+
+            // Headers with Session Token
+            const headers = {
+                "Content-Type": "application/json",
+                "authorization": token,
+            };
+
+            try {
+                const response = await callAPI(query, headers);
+                if (response.data.errors) {
+                    setError(response.data.errors[0].message);
+                } else {
+                    setUserData(response.data.data.AUTH_SVC_AUTH_SVC_getUserDetailsById.user);
+                }
+            } catch (err: any) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [sessionToken]);
 
     return (
         <div className="w-screen h-screen flex flex-col bg-gradient-to-br from-indigo-50 to-indigo-100">
-            {/* Navigation Bar */}
-            <nav className="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-indigo-600">Portal Dashboard</h1>
-                    <div className="flex space-x-4 bg-white p-2 rounded-lg shadow-md border border-gray-100">
-                        <button className="bg-white text-gray-700 hover:text-indigo-500 flex items-center space-x-1 px-4 py-2 rounded-lg transition-all duration-200 ease-in-out">
-                            <FaUserCircle className="text-lg" />
-                            <span>Profile</span>
-                        </button>
-                        <button className="bg-white text-gray-700 hover:text-indigo-500 flex items-center space-x-1">
-                            <FaCog className="text-lg" />
-                            <span>Settings</span>
-                        </button>
-                        <button onClick={handleLogout} className="bg-white text-red-500 hover:text-red-600 flex items-center space-x-1">
-                            <FaSignOutAlt className="text-lg" />
-                            <span>Logout</span>
-                        </button>
-                    </div>
-            </nav>
-
-            {/* Main Dashboard Content */}
+            <Navigation />
             <div className="flex-grow flex flex-col justify-center items-center">
                 <div className="w-full max-w-2xl bg-white p-8 rounded-3xl shadow-2xl border border-gray-200 transition-all duration-300 ease-in-out">
-                    <h2 className="text-3xl font-extrabold text-center text-indigo-600">Welcome, {user?.username || "User"}!</h2>
-                    <p className="text-center text-gray-500 mt-2">You are now logged in.</p>
-
-                    {/* User Information Section */}
-                    <div className="mt-6 space-y-4">
-                        <DashboardCard title="User Role" value="Normal User" />
-                        <DashboardCard title="Email" value={user?.email || "user@example.com"} />
-                        <DashboardCard title="Last Login" value="Just now" />
-                    </div>
+                    <h2 className="text-3xl font-extrabold text-center text-indigo-600">
+                        Welcome, {userData?.firstName || "User"}!
+                    </h2>
+                    {loading && <p className="text-center text-gray-500 mt-2">Loading...</p>}
+                    {error && <p className="text-center text-red-500 mt-2">{error}</p>}
+                    {!loading && !error && (
+                        <div className="mt-6 space-y-4">
+                            <DashboardCard title="User Role" value={userData?.role || "N/A"} />
+                            <DashboardCard title="Email" value={userData?.email || "N/A"} />
+                            <DashboardCard title="Last Login" value="Just now" />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

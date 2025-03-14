@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import DataTable from "react-data-table-component";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import Navigation from "./Navigation";
 
 interface User {
     id: number;
@@ -45,7 +46,7 @@ const initialUsers: User[] = [
         email: "alice@example.com",
         role: "User",
         avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-    },    {
+    }, {
         id: 3,
         name: "Alice Johnson",
         email: "alice@example.com",
@@ -123,49 +124,53 @@ const UserList: React.FC = () => {
     ];
 
     return (
-        <div className="container w-full h-full flex flex-col bg-white p-6 rounded-lg shadow-md">
-            <input
-                type="text"
-                placeholder="Search users..."
-                className="p-3 mb-6 rounded-md border border-gray-300 bg-white text-gray-800 w-1/2 mx-auto focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-            />
+        <>
+            <div className="container w-full h-full flex flex-col bg-white p-6 rounded-lg shadow-md">
+                <Navigation />
+                <div className="mt-6"></div>
+                <input
+                    type="text"
+                    placeholder="Search users..."
+                    className="p-3 mb-6 rounded-md border border-gray-300 bg-white text-gray-800 w-1/2 mx-auto focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                />
 
-            <div className="w-full h-full">
-                <DataTable
-                    columns={columns}
-                    data={filteredUsers}
-                    pagination
-                    highlightOnHover
-                    responsive
-                    customStyles={{
-                        headCells: {
-                            style: {
-                                color: "#333333",
-                                fontSize: "16px",
-                                fontWeight: "bold",
-                            },
-                        },
-                        cells: {
-                            style: {
-                                color: "#333333",
-                                fontSize: "16px",
-                                padding: "2px", 
-                            },
-                        },
-                        rows: {
-                            style: {
-                                borderBottom: "1px solid #dee2e6",
-                                "&:hover": {
-                                    backgroundColor: "transparent",
+                <div className="w-full h-full">
+                    <DataTable
+                        columns={columns}
+                        data={filteredUsers}
+                        pagination
+                        highlightOnHover
+                        responsive
+                        customStyles={{
+                            headCells: {
+                                style: {
+                                    color: "#333333",
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
                                 },
                             },
-                        },
-                    }}
-                />
+                            cells: {
+                                style: {
+                                    color: "#333333",
+                                    fontSize: "16px",
+                                    padding: "2px",
+                                },
+                            },
+                            rows: {
+                                style: {
+                                    borderBottom: "1px solid #dee2e6",
+                                    "&:hover": {
+                                        backgroundColor: "transparent",
+                                    },
+                                },
+                            },
+                        }}
+                    />
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 
