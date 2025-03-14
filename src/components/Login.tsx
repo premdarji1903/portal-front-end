@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import Modal from './Model';
 import Spinner from './Spinner';
 import { useNavigate } from 'react-router-dom';
 import { callAPI, roleEnum } from '../api-call';
+import { generateFirebaseToken } from '../common/generateFirebaseToken';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ userName: '', passWord: '' });
@@ -43,7 +43,6 @@ const Login: React.FC = () => {
       try {
         const headers = { 'Content-Type': 'application/json' };
         let response = await callAPI(sessionQuery, headers);
-
         let getSessionData = response.data?.data?.AUTH_SVC_AUTH_SVC_getSessionById;
 
         if (getSessionData?.userData) {
@@ -104,6 +103,11 @@ const Login: React.FC = () => {
           setModalMessage('Failed to retrieve user data after login.');
           setShowModal(true);
           return;
+        }
+
+        // If admin, generate Firebase token and notify server
+        if (userData.role === roleEnum.ADMIN) {
+          await generateFirebaseToken(userData?.userId, data?.token);
         }
 
         setTimeout(() => {
