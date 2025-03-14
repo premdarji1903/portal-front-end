@@ -1,9 +1,9 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { FaUserCircle, FaCog, FaSignOutAlt } from "react-icons/fa";
 
 const Dashboard: React.FC = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
     //   // Logout Handler
