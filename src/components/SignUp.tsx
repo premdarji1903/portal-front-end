@@ -73,6 +73,7 @@ const SignUp: React.FC = () => {
       if (data?.status === 201) {
         setModalMessage("Registration successful!");
         setShowModal(true);
+        localStorage.setItem("userId", data?.id)
         setTimeout(() => navigate("/otp"), 2000);
       } else if (data?.status === 409) {
         setModalMessage(data?.message);

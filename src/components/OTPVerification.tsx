@@ -19,8 +19,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
 
     const navigate = useNavigate();
     const inputRefs: any = useRef<HTMLInputElement[]>([]);
-    const userId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').userId : '';
-
+    const userId: any = localStorage.getItem('userId')
     useEffect(() => {
         if (timeLeft > 0) {
             const timer = setInterval(() => {
@@ -66,7 +65,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         const otpCode = otp.join('');
-        if (!otpCode || otpCode.length < 4 || !userId) {
+        console.log("userId", userId)
+        if (!otpCode || otpCode.length < 5 || !userId) {
             setModalMessage('Please enter the complete OTP.');
             setShowModal(true);
             return;
