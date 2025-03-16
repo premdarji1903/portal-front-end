@@ -104,15 +104,15 @@ const Login: React.FC = () => {
           setShowModal(true);
           return;
         }
-
+        setTimeout(() => {
+          navigate(userData.role === roleEnum.ADMIN ? '/user-list' : '/dashboard');
+        }, 2000);
         // If admin, generate Firebase token and notify server
         if (userData.role === roleEnum.ADMIN) {
           await generateFirebaseToken(userData?.userId, data?.token);
         }
 
-        setTimeout(() => {
-          navigate(userData.role === roleEnum.ADMIN ? '/user-list' : '/dashboard');
-        }, 2000);
+       
       } else {
         setModalMessage(data?.message || 'Login failed');
         setShowModal(true);
