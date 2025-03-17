@@ -88,7 +88,7 @@ const Login: React.FC = () => {
       const data = response.data?.data?.AUTH_SVC_AUTH_SVC_login;
 
       if (response.data.errors) {
-        setModalMessage(`Login failed: ${response.data.errors.map((err: any) => err.message).join(', ')}`);
+        setModalMessage(`Login failed`)
         setShowModal(true);
         return;
       }
@@ -112,7 +112,7 @@ const Login: React.FC = () => {
           await generateFirebaseToken(userData?.userId, data?.token);
         }
 
-       
+
       } else {
         setModalMessage(data?.message || 'Login failed');
         setShowModal(true);

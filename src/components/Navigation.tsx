@@ -111,8 +111,8 @@ const Navigation = () => {
                                     Notifications
                                 </h3>
                                 {isLoading ? (
-                                    <div className="flex justify-center py-4">
-                                        <Spinner />
+                                    <div className="flex justify-center py-2">
+                                        <Spinner size="w-5 h-5 border-4" />
                                     </div>
                                 ) : (
                                     <div className="max-h-60 overflow-y-auto">
