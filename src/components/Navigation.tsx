@@ -12,33 +12,38 @@ const Navigation = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [logoutSuccess, setLogoutSuccess] = useState(false); // New state for logout success message
+    const [logoutSuccess, setLogoutSuccess] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const userData = getLocalStorageData;
         if (userData?.role === roleEnum.ADMIN) {
             setIsAdmin(true);
+            fetchNotifications();
         }
     }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const response = await axios.get(`${VITE_NOTIFICATION_API_URL}/get-notifications`, {
+                headers: {
+                    Authorization: `Bearer ${getLocalStorageData?.id}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            if (response.status === 200) {
+                setNotifications(response.data?.data);
+            }
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+        }
+    };
+
     const handleNotificationClick = async () => {
         setIsOpen(!isOpen);
-
         if (!isOpen) {
             setIsLoading(true);
-            try {
-                const response = await axios.get(`${VITE_NOTIFICATION_API_URL}/get-notifications`, {
-                    headers: {
-                        Authorization: `Bearer ${getLocalStorageData?.id}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-                if (response.status === 200) {
-                    setNotifications(response.data?.data);
-                }
-            } catch (error) {
-                console.error("Error fetching notifications:", error);
-            }
+            await fetchNotifications();
             setIsLoading(false);
         }
     };
@@ -46,17 +51,16 @@ const Navigation = () => {
     // Logout function
     const handleLogout = async () => {
         setIsLoading(true);
-
         try {
             const query: string = `
-                        mutation MyMutation {
-                            AUTH_SVC_AUTH_SVC_logout(input: { id: "${getLocalStorageData?.id}" }) {
-                                error
-                                message
-                                status
-                            }
-                        }
-                    `;
+                mutation MyMutation {
+                    AUTH_SVC_AUTH_SVC_logout(input: { id: "${getLocalStorageData?.id}" }) {
+                        error
+                        message
+                        status
+                    }
+                }
+            `;
             const headers = {
                 "Content-Type": "application/json",
                 Authorization: `${getLocalStorageData?.id}`,
@@ -65,11 +69,10 @@ const Navigation = () => {
             const data = response.data?.data?.AUTH_SVC_AUTH_SVC_logout;
 
             if (data?.status === 200) {
-                setLogoutSuccess(true); // Show logout success message
-
+                setLogoutSuccess(true);
                 setTimeout(() => {
                     localStorage.clear();
-                    window.location.href = "/"; // Redirect to the landing page
+                    window.location.href = "/";
                 }, 2000);
             } else {
                 alert(`Error: ${data?.message}`);
@@ -78,22 +81,19 @@ const Navigation = () => {
             console.error("Logout failed", error);
             alert("Logout failed. Please try again.");
         }
-
         setIsLoading(false);
     };
 
     return (
         <nav className="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center relative">
-            <h1 className="text-2xl font-bold text-indigo-600">Portal Dashboard</h1>
+            <h1 className="text-2xl font-bold text-blue-600">Portal Dashboard</h1>
             <div className="flex items-center space-x-4 bg-white p-2 rounded-lg shadow-md border border-gray-100 relative">
-
                 {/* Show Bell Icon Only for Admin */}
                 {isAdmin && (
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={handleNotificationClick}
-                            className={`relative bg-white text-gray-700 hover:text-indigo-500 p-2 rounded-lg transition-all duration-200 ease-in-out ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                                }`}
+                            className={`relative bg-white text-gray-700 hover:text-indigo-500 p-2 rounded-lg transition-all duration-200 ease-in-out ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                             disabled={isLoading}
                         >
                             <FaBell className="text-xl" />
@@ -144,13 +144,10 @@ const Navigation = () => {
 
                 {/* Logout Button */}
                 <button
-                    className={`bg-white text-red-500 hover:text-red-600 flex items-center space-x-1 px-4 py-2 rounded-lg transition-all duration-200 ease-in-out ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
                     onClick={() => setShowLogoutPopup(true)}
-                    disabled={isLoading}
+                    className="flex items-center bg-white text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 ease-in-out shadow-md border border-red-500"
                 >
-                    <FaSignOutAlt className="text-lg" />
-                    <span>Logout</span>
+                    <FaSignOutAlt className="mr-2" /> Logout
                 </button>
             </div>
 

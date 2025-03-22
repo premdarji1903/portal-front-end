@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Navigation from "./Navigation";
+import { callAPI } from "../api-call";
 import UserDrawer from "./UserDrawer";
+import Spinner from "./Spinner";
+// import { messaging } from "../firebase-config"; // Import Firebase messaging
+import { onMessage } from "firebase/messaging"; // Import onMessage function
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { messaging } from "../common";
 
 export interface User {
     id: string;
@@ -14,165 +21,209 @@ export interface User {
     gender: string;
 }
 
-// 🔹 Static User Data
-const STATIC_USERS: User[] = Array.from({ length: 50 }, (_, i) => ({
-    id: (i + 1).toString(),
-    firstName: `User ${i + 1}`,
-    lastName: `Last ${i + 1}`,
-    email: `user${i + 1}@example.com`,
-    role: ["Admin", "Editor", "User"][Math.floor(Math.random() * 3)],
-    contactNumber: `123-456-${9000 + i}`,
-    gender: ["Male", "Female"][Math.floor(Math.random() * 2)],
-}));
-
 const UserList: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
-    const [filterText, setFilterText] = useState("");
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const limit = 10; // Number of users to load per batch
-    const observer = useRef<IntersectionObserver | null>(null);
-    const lastUserRef = useRef<HTMLDivElement | null>(null);
-
-    // 🔹 Fetch initial 10 users
-    useEffect(() => {
-        loadMoreUsers();
-    }, []);
-
-    // 🔹 Function to load more users
-    const loadMoreUsers = async () => {
-        if (!hasMore || loading) return;
-        setLoading(true);
-        setTimeout(() => {
-            const newUsers = STATIC_USERS.slice(users.length, users.length + limit);
-            setUsers((prev) => [...prev, ...newUsers]);
-            setHasMore(users.length + limit < STATIC_USERS.length);
-            setLoading(false);
-        }, 1000); // Simulated loading delay
-    };
-
-    // 🔹 Intersection Observer to trigger loading when reaching the bottom
-    const observerCallback = useCallback((entries: IntersectionObserverEntry[]) => {
-        if (entries[0].isIntersecting) {
-            loadMoreUsers();
-        }
-    }, []);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [limit, setLimit] = useState(8); // Page size
 
     useEffect(() => {
-        if (observer.current) observer.current.disconnect();
-        observer.current = new IntersectionObserver(observerCallback, {
-            root: null,
-            rootMargin: "100px",
-            threshold: 0.1,
+        fetchUsers(page, limit);
+        listenForMessages(); // Listen for foreground notifications
+    }, [page, limit]);
+
+    // Listen for foreground push notifications
+    const listenForMessages = () => {
+        onMessage(messaging, (payload) => {
+            console.log("Foreground Notification Received:", payload);
+            toast.info(`📢 ${payload.notification?.title}\n${payload.notification?.body}`);
         });
-        if (lastUserRef.current) observer.current.observe(lastUserRef.current);
-    }, [users]);
-
-    const handleDelete = (id: string) => {
-        setUsers(users.filter((user) => user.id !== id));
     };
 
-    const handleEdit = (userId: string) => {
-        setSelectedUser(userId);
+    const fetchUsers = async (pageNumber = 1, pageSize = limit, retries = 3) => {
+        setLoading(true);
+
+        const query = `
+        mutation {
+            AUTH_SVC_AUTH_SVC_userList(input: { page: ${pageNumber}, perPage: ${pageSize} }) {
+                status
+                message
+                userData {
+                    count
+                    userData {
+                        id
+                        firstName
+                        lastName
+                        email
+                        role
+                        contactNumber
+                        gender
+                    }
+                }
+            }
+        }
+    `;
+
+        try {
+            const response = await callAPI(query, { "Content-Type": "application/json" });
+
+            if (response.data?.data?.AUTH_SVC_AUTH_SVC_userList?.status === 200) {
+                const newUsers = response.data.data.AUTH_SVC_AUTH_SVC_userList.userData.userData;
+                const totalUsersCount = response.data.data.AUTH_SVC_AUTH_SVC_userList.userData.count;
+                setUsers(newUsers);
+                setTotalPages(Math.ceil(totalUsersCount / pageSize));
+            } else {
+                throw new Error("Invalid API response");
+            }
+        } catch (error) {
+            console.error(`Error fetching users. Retries left: ${retries}`, error);
+
+            if (retries > 0) {
+                setTimeout(() => {
+                    fetchUsers(pageNumber, pageSize, retries - 1); // Retry API call
+                }, 2000 * (4 - retries)); // Exponential backoff (2s, 4s, 6s)
+            } else {
+                console.error("Failed after multiple attempts.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const closeDrawer = () => {
-        setSelectedUser(null);
+    const handlePageChange = (newPage: number) => {
+        if (!loading && newPage !== page) {
+            setLoading(true);
+            setPage(newPage);
+        }
     };
 
-    const filteredUsers = users.filter(
-        (user) =>
-            user.firstName.toLowerCase().includes(filterText.toLowerCase()) ||
-            user.lastName.toLowerCase().includes(filterText.toLowerCase()) ||
-            user.email.toLowerCase().includes(filterText.toLowerCase()) ||
-            user.role.toLowerCase().includes(filterText.toLowerCase()) ||
-            user.contactNumber.includes(filterText) ||
-            user.gender.toLowerCase().includes(filterText.toLowerCase())
-    );
-
-    const columns = [
-        {
-            name: "User",
-            selector: (row: User) => row.firstName,
-            sortable: true,
-            cell: (row: User) => (
-                <div className="flex items-center gap-4 p-2">
-                    <span className="font-medium text-gray-800">
-                        {row.firstName} {row.lastName}
-                    </span>
-                </div>
-            ),
-        },
-        {
-            name: "Email",
-            selector: (row: User) => row.email,
-            sortable: true,
-            cell: (row: User) => <span className="text-gray-600 p-2">{row.email}</span>,
-        },
-        {
-            name: "Role",
-            selector: (row: User) => row.role,
-            sortable: true,
-            cell: (row: User) => <span className="text-gray-600 p-2">{row.role}</span>,
-        },
-        {
-            name: "Actions",
-            cell: (row: User) => (
-                <div className="flex gap-2 p-2">
-                    <button
-                        className="bg-white text-blue-500 border border-blue-500 hover:bg-blue-500 hover:text-white p-2 rounded-md transition"
-                        onClick={() => handleEdit(row.id)}
-                    >
-                        <PencilSquareIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                        className="bg-white text-red-500 border border-red-500 hover:bg-red-500 hover:text-white p-2 rounded-md transition"
-                        onClick={() => handleDelete(row.id)}
-                    >
-                        <TrashIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            ),
-        },
-    ];
+    const handleLimitChange = (newLimit: number) => {
+        setPage(1);
+        setLimit(newLimit);
+        fetchUsers(1, newLimit);
+    };
 
     return (
         <>
-            <div className="container w-full h-full flex flex-col bg-white p-6 rounded-lg shadow-md">
-                <Navigation />
-                <div className="mt-6"></div>
-                <input
-                    type="text"
-                    placeholder="Search users..."
-                    className="p-3 mb-6 rounded-md border border-gray-300 bg-white text-gray-800 w-1/2 mx-auto focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterText}
-                    onChange={(e) => setFilterText(e.target.value)}
-                />
+            <ToastContainer position="top-right" autoClose={3000} />
 
-                <div className="w-full h-[500px] overflow-auto custom-scrollbar">
-                    <DataTable
-                        columns={columns}
-                        data={filteredUsers}
-                        highlightOnHover
-                        responsive
-                        className={selectedUser ? "pagination-hidden" : ""}
-                    />
+            {loading && (
+                <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
+                    <Spinner size="w-24 h-24 border-4" />
+                </div>
+            )}
+
+            <div className="min-h-screen flex flex-col bg-gray-100">
+                <div className="sticky top-0 z-50 bg-white shadow-md">
+                    <Navigation />
                 </div>
 
-                {/* Loading Spinner */}
-                {loading && (
-                    <div className="flex justify-center py-4">
-                        <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="container mx-auto p-6 bg-white shadow-md rounded-lg mt-6 flex-grow flex flex-col">
+                    <div className="flex-grow overflow-y-auto max-h-[500px]">
+                        <DataTable
+                            columns={[
+                                {
+                                    name: "User",
+                                    selector: (row: User) => row.firstName,
+                                    sortable: true,
+                                    cell: (row: User) => (
+                                        <span className="font-medium text-gray-800 text-left w-full">
+                                            {row.firstName} {row.lastName}
+                                        </span>
+                                    ),
+                                },
+                                {
+                                    name: "Email",
+                                    selector: (row: User) => row.email,
+                                    sortable: true,
+                                    cell: (row: User) => (
+                                        <span className="text-gray-600 p-2 text-left w-full">{row.email}</span>
+                                    ),
+                                },
+                                {
+                                    name: "Role",
+                                    selector: (row: User) => row.role,
+                                    sortable: true,
+                                    cell: (row: User) => (
+                                        <span className="text-gray-600 p-2 text-left w-full">{row.role}</span>
+                                    ),
+                                },
+                                {
+                                    name: "Actions",
+                                    cell: (row: User) => (
+                                        <div className="flex gap-2 p-2">
+                                            <button
+                                                className="bg-white text-blue-500 border border-blue-500 hover:bg-blue-500 hover:text-white p-2 rounded-md transition"
+                                                onClick={() => {
+                                                    setSelectedUser(row.id);
+                                                    setIsDrawerOpen(true);
+                                                }}
+                                            >
+                                                <PencilSquareIcon className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                className="bg-white text-red-500 border border-red-500 hover:bg-red-500 hover:text-white p-2 rounded-md transition"
+                                                onClick={() => setUsers(users.filter((u) => u.id !== row.id))}
+                                            >
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    ),
+                                },
+                            ]}
+                            data={users}
+                            highlightOnHover
+                            responsive
+                            customStyles={{
+                                headCells: { style: { textAlign: "left" } },
+                                cells: { style: { textAlign: "left" } },
+                            }}
+                        />
                     </div>
-                )}
 
-                {/* Observer target for lazy loading */}
-                <div ref={lastUserRef} className="h-10" />
+                    <div className="sticky bottom-0 bg-white shadow-md p-4 flex justify-center items-center space-x-4">
+                        <button
+                            className={`w-24 h-10 rounded-md border flex items-center justify-center transition ${page === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-black hover:text-white"
+                                }`}
+                            disabled={page === 1}
+                            onClick={() => handlePageChange(page - 1)}
+                        >
+                            Previous
+                        </button>
+
+                        <select
+                            className="w-20 h-10 bg-white border border-gray-400 rounded-md text-black px-2 focus:outline-none hover:text-blue-500"
+                            value={limit}
+                            onChange={(e) => handleLimitChange(Number(e.target.value))}
+                        >
+                            <option value={8}>8</option>
+                            <option value={10}>10</option>
+                            <option value={15}>15</option>
+                            <option value={20}>20</option>
+                        </select>
+
+                        <span className="w-24 h-10 flex items-center justify-center rounded-md bg-gray-100 text-gray-800">
+                            Page {page} of {totalPages}
+                        </span>
+
+                        <button
+                            className={`w-24 h-10 rounded-md border flex items-center justify-center transition ${page === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-black hover:text-white"
+                                }`}
+                            disabled={page === totalPages}
+                            onClick={() => handlePageChange(page + 1)}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
-
-            {/* Drawer Component */}
-            {selectedUser && <UserDrawer userId={selectedUser} onClose={closeDrawer} />}
+            {/* User Drawer */}
+            {isDrawerOpen && selectedUser && (
+                <UserDrawer userId={selectedUser} onClose={() => setIsDrawerOpen(false)} />
+            )}
         </>
     );
 };
