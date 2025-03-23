@@ -10,6 +10,7 @@ import { onMessage } from "firebase/messaging"; // Import onMessage function
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { messaging } from "../common";
+import getLocalStorageData from "../common/get-local-storage";
 
 export interface User {
     id: string;
@@ -29,6 +30,10 @@ const UserList: React.FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [limit, setLimit] = useState(8); // Page size
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [deleteSuccess, setDeleteSuccess] = useState(false);
 
     useEffect(() => {
         fetchUsers(page, limit);
@@ -73,7 +78,8 @@ const UserList: React.FC = () => {
     `;
 
         try {
-            const response = await callAPI(query, { "Content-Type": "application/json" });
+            const token: string | null = getLocalStorageData?.id;
+            const response = await callAPI(query, { "Content-Type": "application/json", "authorization": token });
 
             if (response.data?.data?.AUTH_SVC_AUTH_SVC_userList?.status === 200) {
                 const newUsers = response.data.data.AUTH_SVC_AUTH_SVC_userList.userData.userData;
@@ -97,6 +103,68 @@ const UserList: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const confirmDelete = (id: any) => {
+        setSelectedUserId(id);
+        setShowConfirm(true);
+    };
+
+    const deleteUser = () => {
+        setIsLoading(true);
+        setTimeout(() => {
+            if (selectedUserId !== null) {
+                setUsers(users.filter((u) => u.id !== selectedUserId)); // Optimistic UI update
+                handleDeleteUser(selectedUserId); // Call the actual delete function
+                setDeleteSuccess(true);
+                setTimeout(() => {
+                    setShowConfirm(false);
+                    setDeleteSuccess(false);
+                    setSelectedUserId(null);
+                }, 2000);
+            }
+            setIsLoading(false);
+        }, 1500);
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        if (!userId) return;
+
+        setLoading(true);
+        const query = `
+            mutation {
+                AUTH_SVC_AUTH_SVC_deleteUser(input: { id: "${userId}" }) {
+                    error
+                    message
+                    status
+                }
+            }
+        `;
+
+        const token: string | null = getLocalStorageData?.id;
+
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
+        const headers = {
+            "Content-Type": "application/json",
+            "authorization": token,
+        };
+
+        try {
+            const response = await callAPI(query, headers);
+            if (response.data?.data?.AUTH_SVC_AUTH_SVC_deleteUser?.status === 200) {
+                setUsers(users.filter((u) => u.id !== userId));
+            }
+        } catch (error) {
+            console.error("Error deleting user:", error);
+
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handlePageChange = (newPage: number) => {
         if (!loading && newPage !== page) {
@@ -171,7 +239,7 @@ const UserList: React.FC = () => {
                                             </button>
                                             <button
                                                 className="bg-white text-red-500 border border-red-500 hover:bg-red-500 hover:text-white p-2 rounded-md transition"
-                                                onClick={() => setUsers(users.filter((u) => u.id !== row.id))}
+                                                onClick={() => confirmDelete(row.id)}
                                             >
                                                 <TrashIcon className="w-5 h-5" />
                                             </button>
@@ -228,6 +296,51 @@ const UserList: React.FC = () => {
             {/* User Drawer */}
             {isDrawerOpen && selectedUser && (
                 <UserDrawer userId={selectedUser} onClose={() => setIsDrawerOpen(false)} />
+            )}
+
+            {showConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                        {deleteSuccess ? (
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-lg font-bold text-green-600">User Deleted</h2>
+                                <p className="text-sm text-gray-600 mt-2 text-center">
+                                    The user has been deleted successfully.
+                                </p>
+                                <Spinner />
+                            </div>
+                        ) : (
+                            <>
+                                <h2 className="text-lg font-bold text-gray-700">Confirm Deletion</h2>
+                                <p className="text-sm text-gray-600 mt-2">
+                                    Are you sure you want to delete this user?
+                                </p>
+                                {isLoading ? (
+                                    <div className="flex justify-center py-4">
+                                        <Spinner />
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-end space-x-2 mt-4">
+                                        <button
+                                            onClick={() => setShowConfirm(false)}
+                                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                                            disabled={isLoading}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={deleteUser}
+                                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                                            disabled={isLoading}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
             )}
         </>
     );
