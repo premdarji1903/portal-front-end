@@ -40,6 +40,11 @@ const UserList: React.FC = () => {
         onMessage(messaging, (payload) => {
             console.log("Foreground Notification Received:", payload);
             toast.info(`📢 ${payload.notification?.title}\n${payload.notification?.body}`);
+
+            // Reload full page
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000); // Give toast some time before reloading
         });
     };
 
