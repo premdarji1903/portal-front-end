@@ -185,7 +185,7 @@ const UserList: React.FC = () => {
 
             {loading && (
                 <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
-                    <Spinner size="w-24 h-24 border-4" />
+                    <Spinner size="w-16 h-16 border-[6px]" />
                 </div>
             )}
 
@@ -214,6 +214,22 @@ const UserList: React.FC = () => {
                                     sortable: true,
                                     cell: (row: User) => (
                                         <span className="text-gray-600 p-2 text-left w-full">{row.email}</span>
+                                    ),
+                                },
+                                {
+                                    name: "Gender",
+                                    selector: (row: User) => row.gender,
+                                    sortable: true,
+                                    cell: (row: User) => (
+                                        <span className="text-gray-600 p-2 text-left w-full">{row.gender}</span>
+                                    ),
+                                },
+                                {
+                                    name: "Contact No.",
+                                    selector: (row: User) => row.contactNumber,
+                                    sortable: true,
+                                    cell: (row: User) => (
+                                        <span className="text-gray-600 p-2 text-left w-full">{row.contactNumber}</span>
                                     ),
                                 },
                                 {
@@ -295,7 +311,7 @@ const UserList: React.FC = () => {
             </div>
             {/* User Drawer */}
             {isDrawerOpen && selectedUser && (
-                <UserDrawer userId={selectedUser} onClose={() => setIsDrawerOpen(false)} />
+                <UserDrawer userId={selectedUser} onClose={() => setIsDrawerOpen(false)} onUpdate={fetchUsers} />
             )}
 
             {showConfirm && (
