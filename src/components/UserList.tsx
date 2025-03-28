@@ -51,6 +51,8 @@ const UserList: React.FC = () => {
 
     const listenForMessages = () => {
         onMessage(messaging, (payload) => {
+            console.log("messaging", messaging)
+            console.log("payload", payload)
             toast.info(`📢 ${payload.notification?.title}\n${payload.notification?.body}`);
             setTimeout(() => {
                 window.location.reload();
@@ -58,10 +60,7 @@ const UserList: React.FC = () => {
         });
     };
     useEffect(() => {
-
-
         listenForMessages();
-
         return () => {
             console.log("Cleaning up Firebase listener...");
         };
