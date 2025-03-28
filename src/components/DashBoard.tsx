@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 import Navigation from "./Navigation";
 import { callAPI } from "../api-call";
-
+import Spinner from "./Spinner";
 const Dashboard: React.FC = () => {
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Retrieve session token from local storage
     const sessionToken: any = localStorage.getItem("userData");
-    // console.log(JSON.parse(sessionToken)?.id)
-    const token = JSON.parse(sessionToken)?.id
-    const userId = JSON.parse(sessionToken)?.userId
+    const token = JSON.parse(sessionToken)?.id;
+    const userId = JSON.parse(sessionToken)?.userId;
+
     useEffect(() => {
         const fetchData = async () => {
             if (!token) {
@@ -19,7 +18,6 @@ const Dashboard: React.FC = () => {
                 setLoading(false);
                 return;
             }
-
             const query = `
                 query MyQuery {
                     AUTH_SVC_AUTH_SVC_getUserDetailsById(input: { id: "${userId}" }) {
@@ -40,7 +38,6 @@ const Dashboard: React.FC = () => {
                 }
             `;
 
-            // Headers with Session Token
             const headers = {
                 "Content-Type": "application/json",
                 "authorization": token,
@@ -57,6 +54,7 @@ const Dashboard: React.FC = () => {
                 setError(err.message);
             } finally {
                 setLoading(false);
+
             }
         };
 
@@ -66,22 +64,30 @@ const Dashboard: React.FC = () => {
     return (
         <div className="w-screen h-screen flex flex-col bg-gradient-to-br from-indigo-50 to-indigo-100">
             <Navigation />
-            <div className="flex-grow flex flex-col justify-center items-center">
-                <div className="w-full max-w-2xl bg-white p-8 rounded-3xl shadow-2xl border border-gray-200 transition-all duration-300 ease-in-out">
-                    <h2 className="text-3xl font-extrabold text-center text-indigo-600">
-                        Welcome, {userData?.firstName || "User"}!
-                    </h2>
-                    {loading && <p className="text-center text-gray-500 mt-2">Loading...</p>}
-                    {error && <p className="text-center text-red-500 mt-2">{error}</p>}
-                    {!loading && !error && (
+            {loading && (
+                <div className="fixed inset-0 flex flex-col justify-center items-center bg-gray-500 bg-opacity-50">
+                    <p className="text-black text-lg font-semibold mb-2">Loading user data, please wait...</p>
+                    <Spinner />
+                </div>
+            )}
+
+
+            {!loading && !error && (
+                <div className="flex-grow flex flex-col justify-center items-center">
+                    <div className="w-full max-w-2xl bg-white p-8 rounded-3xl shadow-2xl border border-gray-200 transition-all duration-300 ease-in-out">
+                        <h2 className="text-3xl font-extrabold text-center text-indigo-600">
+                            Welcome, {`${userData?.firstName} ${userData?.lastName}` || "User"}!
+                        </h2>
+                        {error && <p className="text-center text-red-500 mt-2">{error}</p>}
                         <div className="mt-6 space-y-4">
+                            <DashboardCard title="User Name" value={`${userData?.firstName} ${userData?.lastName}` || "N/A"} />
                             <DashboardCard title="User Role" value={userData?.role || "N/A"} />
                             <DashboardCard title="Email" value={userData?.email || "N/A"} />
-                            <DashboardCard title="Last Login" value="Just now" />
+                            <DashboardCard title="Gender" value={userData?.gender || "N/A"} />
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

@@ -65,7 +65,6 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         const otpCode = otp.join('');
-        console.log("userId", userId)
         if (!otpCode || otpCode.length < 5 || !userId) {
             setModalMessage('Please enter the complete OTP.');
             setShowModal(true);

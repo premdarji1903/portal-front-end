@@ -14,10 +14,18 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const [token, setToken] = useState("")
 
     useEffect(() => {
-        let isMounted = true;
+        let userData: any = localStorage.getItem("userData");
+        userData = JSON.parse(userData)?.id;
+        const sessionToken: string = userData ?? getLocalStorageData?.id;
+        setToken(sessionToken);
+    }, []);
 
+    useEffect(() => {
+        if (!token) return;
+        let isMounted = true;
         const fetchUserDetails = async (attempt = 1) => {
             try {
                 if (!isMounted) return;
@@ -42,30 +50,25 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
                         }
                     }
                 `;
-                const token: string = getLocalStorageData?.id;
                 const headers = {
                     "Content-Type": "application/json",
-                    "authorization": token,
+                    "authorization": token, // Ensure token is available
                 };
                 const response = await callAPI(query, headers);
                 const userData = response?.data?.data?.AUTH_SVC_AUTH_SVC_getUserDetailsById?.user;
 
-                if (userData) {
-                    if (isMounted) {
-                        setOriginalUser(userData);
-                        setEditedUser(userData);
-                        setError(null);
-                        setLoading(false);
-                    }
+                if (userData && isMounted) {
+                    setOriginalUser(userData);
+                    setEditedUser(userData);
+                    setError(null);
+                    setLoading(false);
                 } else {
                     throw new Error("User not found.");
                 }
             } catch (err) {
                 if (attempt < 3) {
-                    console.log(`Retrying... Attempt ${attempt + 1}`);
                     setTimeout(() => fetchUserDetails(attempt + 1), 1000);
                 } else {
-                    console.log("All attempts failed.");
                     if (isMounted) {
                         setError("Failed to fetch user details.");
                         setTimeout(() => onClose(), 2000);
@@ -79,7 +82,7 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
         return () => {
             isMounted = false;
         };
-    }, [userId, onClose]);
+    }, [token, userId, onClose]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -100,7 +103,6 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
         });
 
         if (Object.keys(updatedFields).length === 0) {
-            console.log("No changes detected.");
             return;
         }
 
@@ -123,8 +125,6 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
                     }
                 }
             `;
-
-            const token: string = getLocalStorageData?.id;
             const headers = {
                 "Content-Type": "application/json",
                 "authorization": token,

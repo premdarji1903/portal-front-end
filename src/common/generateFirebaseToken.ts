@@ -16,7 +16,7 @@ export const generateFirebaseToken = async (userId: string, authToken: string) =
         });
 
         // Send token to server
-        const response = await axios.post(`${VITE_NOTIFICATION_API_URL}/save-token`, {
+        await axios.post(`${VITE_NOTIFICATION_API_URL}/save-token`, {
             token,
             userId,
         }, {
@@ -27,7 +27,6 @@ export const generateFirebaseToken = async (userId: string, authToken: string) =
         }
 
         );
-        console.log(response)
 
     } catch (error) {
         console.error("Error generating Firebase token:", error);

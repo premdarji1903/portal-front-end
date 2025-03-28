@@ -15,6 +15,15 @@ const Navigation = () => {
     const [logoutSuccess, setLogoutSuccess] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    const [token, setToken] = useState("")
+
+    useEffect(() => {
+        let userData: any = localStorage.getItem("userData");
+        userData = JSON.parse(userData)?.id;
+        const sessionToken: string = userData ?? getLocalStorageData?.id;
+        setToken(sessionToken);
+    }, []);
+
     useEffect(() => {
         const userData = getLocalStorageData;
         if (userData?.role === roleEnum.ADMIN) {
@@ -50,11 +59,12 @@ const Navigation = () => {
 
     // Logout function
     const handleLogout = async () => {
+
         setIsLoading(true);
         try {
             const query: string = `
                 mutation MyMutation {
-                    AUTH_SVC_AUTH_SVC_logout(input: { id: "${getLocalStorageData?.id}" }) {
+                    AUTH_SVC_AUTH_SVC_logout(input: { id: "${token}" }) {
                         error
                         message
                         status
@@ -63,7 +73,7 @@ const Navigation = () => {
             `;
             const headers = {
                 "Content-Type": "application/json",
-                Authorization: `${getLocalStorageData?.id}`,
+                Authorization: `${token}`,
             };
             const response = await callAPI(query, headers);
             const data = response.data?.data?.AUTH_SVC_AUTH_SVC_logout;

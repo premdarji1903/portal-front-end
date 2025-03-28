@@ -34,24 +34,41 @@ const UserList: React.FC = () => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [deleteSuccess, setDeleteSuccess] = useState(false);
+    const [token, setToken] = useState("")
 
     useEffect(() => {
-        fetchUsers(page, limit);
-        listenForMessages(); // Listen for foreground notifications
-    }, [page, limit]);
+        let userData: any = localStorage.getItem("userData");
+        userData = JSON.parse(userData)?.id;
+        const sessionToken: string = userData ?? getLocalStorageData?.id;
+        setToken(sessionToken);
+    }, []); // Only runs on mount
 
-    // Listen for foreground push notifications
+    useEffect(() => {
+        if (token) {
+            fetchUsers(page, limit);
+        }
+    }, [token, page, limit])
+
     const listenForMessages = () => {
         onMessage(messaging, (payload) => {
-            console.log("Foreground Notification Received:", payload);
             toast.info(`📢 ${payload.notification?.title}\n${payload.notification?.body}`);
-
-            // Reload full page
             setTimeout(() => {
                 window.location.reload();
             }, 3000); // Give toast some time before reloading
         });
     };
+    useEffect(() => {
+
+
+        listenForMessages();
+
+        return () => {
+            console.log("Cleaning up Firebase listener...");
+        };
+    }, [listenForMessages]);
+
+    // Listen for foreground push notifications
+
 
     const fetchUsers = async (pageNumber = 1, pageSize = limit, retries = 3) => {
         setLoading(true);
@@ -78,7 +95,7 @@ const UserList: React.FC = () => {
     `;
 
         try {
-            const token: string | null = getLocalStorageData?.id;
+
             const response = await callAPI(query, { "Content-Type": "application/json", "authorization": token });
 
             if (response.data?.data?.AUTH_SVC_AUTH_SVC_userList?.status === 200) {
