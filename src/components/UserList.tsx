@@ -70,6 +70,9 @@ const UserList: React.FC = () => {
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event?.target?.value?.trim() ?? "";
+        if (value === "") {
+            fetchUsers(1, 10, 3, "");
+        }
         setSearchTerm(value);
     }
 
