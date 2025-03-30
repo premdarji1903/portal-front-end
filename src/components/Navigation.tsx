@@ -35,9 +35,12 @@ const Navigation = () => {
 
     const fetchNotifications = async () => {
         try {
+            let userData: any = localStorage.getItem("userData");
+            userData = JSON.parse(userData)?.id;
+            const sessionToken: string = userData ?? getLocalStorageData?.id;
             const response = await axios.get(`${VITE_NOTIFICATION_API_URL}/get-notifications`, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${sessionToken}`,
                     "Content-Type": "application/json",
                 },
             });
