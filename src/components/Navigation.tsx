@@ -25,7 +25,8 @@ const Navigation = () => {
     }, []);
 
     useEffect(() => {
-        const userData = getLocalStorageData;
+        let userData: any = localStorage.getItem("userData")
+        userData = JSON.parse(userData)
         if (userData?.role === roleEnum.ADMIN) {
             setIsAdmin(true);
             fetchNotifications();
@@ -36,7 +37,7 @@ const Navigation = () => {
         try {
             const response = await axios.get(`${VITE_NOTIFICATION_API_URL}/get-notifications`, {
                 headers: {
-                    Authorization: `Bearer ${getLocalStorageData?.id}`,
+                    Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             });
