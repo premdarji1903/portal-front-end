@@ -10,6 +10,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { messaging } from "../common";
 import getLocalStorageData from "../common/get-local-storage";
+import Modal from "./Model";
+import { useNavigate } from "react-router-dom";
 
 export interface User {
     id: string;
@@ -36,6 +38,9 @@ const UserList: React.FC = () => {
     const [token, setToken] = useState("")
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [isSessionExpired, setIsSessionExpired] = useState(false)
+    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         let userData: any = localStorage.getItem("userData");
@@ -126,6 +131,12 @@ const UserList: React.FC = () => {
                 setUsers(newUsers);
                 setTotalPages(Math.ceil(totalUsersCount / pageSize));
             } else {
+                setTimeout(() => {
+                    setShowModal(false);
+                    navigate("/login");
+                }, 3000);
+                setIsSessionExpired(true)
+                setShowModal(true)
                 throw new Error("Invalid API response");
             }
         } catch (error) {
@@ -418,6 +429,9 @@ const UserList: React.FC = () => {
                     </div>
                 )
             }
+
+            {isSessionExpired && (
+                <Modal isOpen={showModal} message="Your session has expired. Redirecting to login..." onClose={() => { }} />)}
         </>
     );
 };

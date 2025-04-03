@@ -94,7 +94,7 @@ const Login: React.FC = () => {
       }
 
       if (data?.token) {
-        setModalMessage('Login successful');
+        setModalMessage('Welcome back! You have successfully logged in.');
         setShowModal(true);
 
         const userData = await fetchSessionData(3, 2000, data?.token);
