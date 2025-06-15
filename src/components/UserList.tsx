@@ -8,7 +8,7 @@ import Spinner from "./Spinner";
 import { onMessage } from "firebase/messaging";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { messaging } from "../common";
+import { messaging, VITE_USER_SVC_API_URL } from "../common";
 import getLocalStorageData from "../common/get-local-storage";
 import Modal from "./Model";
 import { useNavigate } from "react-router-dom";
@@ -103,10 +103,10 @@ const UserList: React.FC = () => {
 
         const query = `
         mutation {
-            AUTH_SVC_AUTH_SVC_userList(input: { page: ${pageNumber}, perPage: ${pageSize},search:"${search}" }) {
+              USER_SVC_userService_userList(input: { page: ${pageNumber}, perPage: ${pageSize},search:"${search}" }) {
                 status
                 message
-                userData {
+                userDetail {
                     count
                     userData {
                         id
@@ -122,12 +122,14 @@ const UserList: React.FC = () => {
         }
     `;
         try {
-            const response = await callAPI(query, { "Content-Type": "application/json", "authorization": token });
-
-            if (response.data?.data?.AUTH_SVC_AUTH_SVC_userList?.status === 200) {
-                const userData = response?.data?.data?.AUTH_SVC_AUTH_SVC_userList?.userData;
+            const response = await callAPI(query, { "Content-Type": "application/json", "authorization": token }, VITE_USER_SVC_API_URL);
+            if (response.data?.data?.USER_SVC_userService_userList
+                ?.status === 200) {
+                const userData = response?.data?.data?.USER_SVC_userService_userList
+                    ?.userDetail;
                 const newUsers = userData?.userData ?? []
-                const totalUsersCount = response.data.data.AUTH_SVC_AUTH_SVC_userList.userData.count;
+                const totalUsersCount = response?.data?.data?.USER_SVC_userService_userList
+                    .userDetail?.count;
                 setUsers(newUsers);
                 setTotalPages(Math.ceil(totalUsersCount / pageSize));
             } else {
@@ -182,7 +184,7 @@ const UserList: React.FC = () => {
         setLoading(true);
         const query = `
             mutation {
-                AUTH_SVC_AUTH_SVC_deleteUser(input: { id: "${userId}" }) {
+                 USER_SVC_userService_deleteUser(input: { id: "${userId}" }) {
                     error
                     message
                     status
@@ -203,8 +205,8 @@ const UserList: React.FC = () => {
         };
 
         try {
-            const response = await callAPI(query, headers);
-            if (response.data?.data?.AUTH_SVC_AUTH_SVC_deleteUser?.status === 200) {
+            const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
+            if (response.data?.data?.USER_SVC_userService_deleteUser?.status === 200) {
                 setUsers(users.filter((u) => u.id !== userId));
             }
         } catch (error) {

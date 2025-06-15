@@ -5,6 +5,7 @@ import getLocalStorageData from "../common/get-local-storage";
 import { callAPI } from "../api-call";
 import Spinner from "./Spinner";
 import Modal from "./Model";
+import { VITE_USER_SVC_API_URL } from "../common";
 
 const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () => void }> = ({ userId, onClose, onUpdate }) => {
     const [originalUser, setOriginalUser] = useState<User | null>(null);
@@ -33,7 +34,7 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
 
                 const query = `
                     query {
-                        AUTH_SVC_AUTH_SVC_getUserDetailsById(input: {id: "${userId}"}) {
+                         USER_SVC_userService_getUserById(input: {id: "${userId}"}) {
                             error
                             message
                             status
@@ -54,8 +55,8 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
                     "Content-Type": "application/json",
                     "authorization": token, // Ensure token is available
                 };
-                const response = await callAPI(query, headers);
-                const userData = response?.data?.data?.AUTH_SVC_AUTH_SVC_getUserDetailsById?.user;
+                const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
+                const userData = response?.data?.data?.USER_SVC_userService_getUserById?.user;
 
                 if (userData && isMounted) {
                     setOriginalUser(userData);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navigation from "./Navigation";
 import { callAPI } from "../api-call";
 import Spinner from "./Spinner";
+import { VITE_USER_SVC_API_URL } from "../common";
 const Dashboard: React.FC = () => {
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -20,7 +21,7 @@ const Dashboard: React.FC = () => {
             }
             const query = `
                 query MyQuery {
-                    AUTH_SVC_AUTH_SVC_getUserDetailsById(input: { id: "${userId}" }) {
+                    USER_SVC_userService_getUserById(input: { id: "${userId}" }) {
                         error
                         message
                         status
@@ -44,11 +45,11 @@ const Dashboard: React.FC = () => {
             };
 
             try {
-                const response = await callAPI(query, headers);
+                const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
                 if (response.data.errors) {
                     setError(response.data.errors[0].message);
                 } else {
-                    setUserData(response.data.data.AUTH_SVC_AUTH_SVC_getUserDetailsById.user);
+                    setUserData(response.data.data.USER_SVC_userService_getUserById.user);
                 }
             } catch (err: any) {
                 setError(err.message);
