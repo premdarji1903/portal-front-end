@@ -4,7 +4,8 @@ import Modal from "./Model";
 import { useNavigate } from "react-router-dom";
 import Spinner from "./Spinner";
 import { VITE_APP_URL } from "../common";
-
+import { FcGoogle } from "react-icons/fc";
+import { googleRedirectUrl } from "../common";
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -23,6 +24,10 @@ const SignUp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const googleFun = () => {
+    const url = googleRedirectUrl()
+    window.location.href = url;
+  }
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | any>) => {
     const { name, value, type, checked } = e.target;
@@ -127,6 +132,15 @@ const SignUp: React.FC = () => {
                     className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                   >
                     Create an account
+                  </button>
+
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2 text-gray-700 bg-white border border-gray-400 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                    onClick={googleFun}
+                  >
+                    <FcGoogle className="w-5 h-5" />
+                    Sign up with Google
                   </button>
                 </form>
               </div>
