@@ -112,7 +112,7 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
 
             const mutation = `
                 mutation {
-                    AUTH_SVC_AUTH_SVC_updateUser(
+                    USER_SVC_userService_updateUser(
                         input: {
                             id: "${userId}",
                             ${Object.entries(updatedFields)
@@ -131,8 +131,8 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
                 "authorization": token,
             };
 
-            const response = await callAPI(mutation, headers);
-            if (response?.data?.data?.AUTH_SVC_AUTH_SVC_updateUser?.status === 201) {
+            const response = await callAPI(mutation, headers, VITE_USER_SVC_API_URL);
+            if (response?.data?.data?.USER_SVC_userService_updateUser?.status === 201) {
                 setModalMessage("User Updated");
                 setShowModal(true);
                 setOriginalUser(editedUser);
