@@ -14,6 +14,5 @@ export function googleRedirectUrl(): string {
 
     const authUrl = `${GOOGLE_OAUTH_URL}?client_id=${clientId}&redirect_uri=${redirectUri}&access_type=offline&response_type=code&state=${state}&scope=${scopes}`;
 
-    console.log(authUrl);
     return authUrl;
 }

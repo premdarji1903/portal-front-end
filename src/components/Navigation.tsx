@@ -15,14 +15,14 @@ const Navigation = () => {
     const [logoutSuccess, setLogoutSuccess] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const [token, setToken] = useState("")
+    // const [token, setToken] = useState("")
 
-    useEffect(() => {
-        let userData: any = localStorage.getItem("userData");
-        userData = JSON.parse(userData)?.id;
-        const sessionToken: string = userData ?? getLocalStorageData?.id;
-        setToken(sessionToken);
-    }, []);
+    // useEffect(() => {
+    //     let userData: any = localStorage.getItem("userData");
+    //     userData = JSON.parse(userData)?.id;
+    //     const sessionToken: string = userData ?? getLocalStorageData?.id;
+    //     setToken(sessionToken);
+    // }, []);
 
     useEffect(() => {
         let userData: any = localStorage.getItem("userData")
@@ -66,9 +66,12 @@ const Navigation = () => {
 
         setIsLoading(true);
         try {
+            let userData: any = localStorage.getItem("userData");
+            userData = JSON.parse(userData)?.id;
+            const sessionToken: string = userData ?? getLocalStorageData?.id;
             const query: string = `
                 mutation MyMutation {
-                    AUTH_SVC_AUTH_SVC_logout(input: { id: "${token}" }) {
+                    AUTH_SVC_AUTH_SVC_logout(input: { id: "${sessionToken}" }) {
                         error
                         message
                         status
@@ -77,7 +80,7 @@ const Navigation = () => {
             `;
             const headers = {
                 "Content-Type": "application/json",
-                Authorization: `${token}`,
+                Authorization: `${sessionToken}`,
             };
             const response = await callAPI(query, headers);
             const data = response.data?.data?.AUTH_SVC_AUTH_SVC_logout;

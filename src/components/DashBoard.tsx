@@ -2,35 +2,46 @@ import React, { useEffect, useState } from "react";
 import Navigation from "./Navigation";
 import { callAPI } from "../api-call";
 import Spinner from "./Spinner";
-import { VITE_USER_SVC_API_URL } from "../common";
+import { VITE_APP_URL, VITE_USER_SVC_API_URL } from "../common";
 const Dashboard: React.FC = () => {
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    const sessionToken: any = localStorage.getItem("userData");
-    const token = JSON.parse(sessionToken)?.id;
-    const userId = JSON.parse(sessionToken)?.userId;
-
     useEffect(() => {
         const fetchData = async () => {
-            if (!token) {
-                setError("Unauthorized: No session token found");
-                setLoading(false);
-                return;
-            }
-            const query = `
-                query MyQuery {
-                    USER_SVC_userService_getUserById(input: { id: "${userId}" }) {
+            let localUserDataRaw = localStorage.getItem("userData");
+            let localUserData = localUserDataRaw ? JSON.parse(localUserDataRaw) : null;
+
+            let token = localUserData?.id || null;
+            let userId = localUserData?.userId || null;
+            let from = null;
+
+            // If no token/userId, fallback to query params
+            if (!token || !userId) {
+                const searchParams = new URLSearchParams(window.location.search);
+                token = searchParams.get("token");
+                from = searchParams.get("from");
+
+                if (!token && from !== "Google") {
+                    setError("Unauthorized: No session token found");
+                    setLoading(false);
+                    return;
+                }
+
+                // Fetch session using token from query param
+                const sessionQuery = `
+                query {
+                    AUTH_SVC_AUTH_SVC_getSessionById(input: { id: "${token}" }) {
                         error
                         message
                         status
-                        user {
-                            contactNumber
+                        userData {
                             email
+                            contactNumber
+                            firstName
                             gender
                             id
-                            firstName
                             lastName
                             role
                             userId
@@ -39,28 +50,72 @@ const Dashboard: React.FC = () => {
                 }
             `;
 
-            const headers = {
-                "Content-Type": "application/json",
-                "authorization": token,
-            };
+                try {
+                    const sessionRes = await callAPI(sessionQuery, {
+                        "Content-Type": "application/json",
+                    }, VITE_APP_URL);
+
+                    const userData = sessionRes?.data?.data?.AUTH_SVC_AUTH_SVC_getSessionById?.userData;
+
+                    if (!userData) {
+                        setError("Unauthorized: Invalid session token");
+                        setLoading(false);
+                        return;
+                    }
+
+                    localStorage.setItem("userData", JSON.stringify(userData));
+                    userId = userData.userId;
+                } catch (err: any) {
+                    setError("Session fetch failed: " + err.message);
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // Now fetch full user details
+            const userQuery = `
+            query {
+                USER_SVC_userService_getUserById(input: { id: "${userId}" }) {
+                    error
+                    message
+                    status
+                    user {
+                        contactNumber
+                        email
+                        gender
+                        id
+                        firstName
+                        lastName
+                        role
+                        userId
+                    }
+                }
+            }
+        `;
 
             try {
-                const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
-                if (response.data.errors) {
-                    setError(response.data.errors[0].message);
+                const userResponse = await callAPI(userQuery, {
+                    "Content-Type": "application/json",
+                    "authorization": token,
+                }, VITE_USER_SVC_API_URL);
+
+                const user = userResponse?.data?.data?.USER_SVC_userService_getUserById?.user;
+
+                if (!user) {
+                    setError("User not found.");
                 } else {
-                    setUserData(response.data.data.USER_SVC_userService_getUserById.user);
+                    setUserData(user);
                 }
             } catch (err: any) {
-                setError(err.message);
+                setError("User fetch failed: " + err.message);
             } finally {
                 setLoading(false);
-
             }
         };
 
         fetchData();
-    }, [sessionToken]);
+    }, []);
+    ;
 
     return (
         <div className="w-screen h-screen flex flex-col bg-gradient-to-br from-indigo-50 to-indigo-100">

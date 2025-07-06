@@ -4,6 +4,8 @@ import Spinner from './Spinner';
 import { useNavigate } from 'react-router-dom';
 import { callAPI, roleEnum } from '../api-call';
 import { generateFirebaseToken } from '../common/generateFirebaseToken';
+import { FcGoogle } from 'react-icons/fc';
+import { googleRedirectUrl } from '../common';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ userName: '', passWord: '' });
@@ -125,6 +127,11 @@ const Login: React.FC = () => {
     }
   };
 
+  const googleFun = () => {
+    const url = googleRedirectUrl()
+    window.location.href = url;
+  }
+
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-white">
       <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-xl border border-gray-300 transition-all duration-200 ease-in-out">
@@ -142,6 +149,16 @@ const Login: React.FC = () => {
             Login
           </button>
         </form>
+        <br />
+
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-2 text-gray-700 bg-white border border-gray-400 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          onClick={googleFun}
+        >
+          <FcGoogle className="w-5 h-5" />
+          Sign in with Google
+        </button>
       </div>
       <Modal isOpen={showModal} message={modalMessage} onClose={() => setShowModal(false)} />
       {loading && (
