@@ -2,8 +2,8 @@ import axios from "axios";
 import { useEffect, useState, useRef } from "react";
 import { FaBell, FaSignOutAlt } from "react-icons/fa";
 import getLocalStorageData from "../common/get-local-storage";
-import { VITE_NOTIFICATION_API_URL } from "../common";
-import { callAPI, roleEnum } from "../api-call";
+import { VITE_AUTH_SVC_REST_URL, VITE_NOTIFICATION_API_URL } from "../common";
+import { callRestAPI, roleEnum } from "../api-call";
 import Spinner from "../components/Spinner"; // Importing Spinner Component
 
 const Navigation = () => {
@@ -69,21 +69,22 @@ const Navigation = () => {
             let userData: any = localStorage.getItem("userData");
             userData = JSON.parse(userData)?.id;
             const sessionToken: string = userData ?? getLocalStorageData?.id;
-            const query: string = `
-                mutation MyMutation {
-                    AUTH_SVC_AUTH_SVC_logout(input: { id: "${sessionToken}" }) {
-                        error
-                        message
-                        status
-                    }
-                }
-            `;
+            // const query: string = `
+            //     mutation MyMutation {
+            //         AUTH_SVC_AUTH_SVC_logout(input: { id: "${sessionToken}" }) {
+            //             error
+            //             message
+            //             status
+            //         }
+            //     }
+            // `;
             const headers = {
                 "Content-Type": "application/json",
                 Authorization: `${sessionToken}`,
             };
-            const response = await callAPI(query, headers);
-            const data = response.data?.data?.AUTH_SVC_AUTH_SVC_logout;
+            // const response = await callAPI(query, headers);
+            const response = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/logout`, 'post', { id: sessionToken }, headers)
+            const data = response.data;
 
             if (data?.status === 200) {
                 setLogoutSuccess(true);

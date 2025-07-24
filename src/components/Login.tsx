@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import Modal from './Model';
 import Spinner from './Spinner';
 import { useNavigate } from 'react-router-dom';
-import { callAPI, roleEnum } from '../api-call';
+import { callRestAPI, roleEnum } from '../api-call';
 import { generateFirebaseToken } from '../common/generateFirebaseToken';
 import { FcGoogle } from 'react-icons/fc';
-import { googleRedirectUrl } from '../common';
+import { googleRedirectUrl, VITE_AUTH_SVC_REST_URL } from '../common';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ userName: '', passWord: '' });
@@ -21,31 +21,32 @@ const Login: React.FC = () => {
 
   const fetchSessionData = async (maxRetries = 3, delay = 2000, token: string) => {
     let retries = 0;
-    const sessionQuery = `
-      query {
-        AUTH_SVC_AUTH_SVC_getSessionById(input: {id: "${token}"}) {
-          userData {
-            contactNumber
-            email
-            firstName
-            gender
-            id
-            lastName
-            role
-            userId
-          }
-          status
-          message
-          error
-        }
-      }
-    `;
+    // const sessionQuery = `
+    //   query {
+    //     AUTH_SVC_AUTH_SVC_getSessionById(input: {id: "${token}"}) {
+    //       userData {
+    //         contactNumber
+    //         email
+    //         firstName
+    //         gender
+    //         id
+    //         lastName
+    //         role
+    //         userId
+    //       }
+    //       status
+    //       message
+    //       error
+    //     }
+    //   }
+    // `;
 
     while (retries < maxRetries) {
       try {
         const headers = { 'Content-Type': 'application/json' };
-        let response = await callAPI(sessionQuery, headers);
-        let getSessionData = response.data?.data?.AUTH_SVC_AUTH_SVC_getSessionById;
+        // let response = await callAPI(sessionQuery, headers);
+        let response = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/get-session-by-id/${token}`, 'get', headers)
+        let getSessionData = response.data;
 
         if (getSessionData?.userData) {
           localStorage.setItem("userData", JSON.stringify(getSessionData?.userData));
@@ -70,26 +71,28 @@ const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    const query = `
-      mutation {
-        AUTH_SVC_AUTH_SVC_login(input: {
-          userName: "${formData.userName}",
-          passWord: "${formData.passWord}"
-        }) {
-          error
-          token
-          message
-          status
-        }
-      }
-    `;
+    // const query = `
+    //   mutation {
+    //     AUTH_SVC_AUTH_SVC_login(input: {
+    //       userName: "${formData.userName}",
+    //       passWord: "${formData.passWord}"
+    //     }) {
+    //       error
+    //       token
+    //       message
+    //       status
+    //     }
+    //   }
+    // `;
 
     try {
-      const headers = { 'Content-Type': 'application/json' };
-      const response = await callAPI(query, headers);
-      const data = response.data?.data?.AUTH_SVC_AUTH_SVC_login;
 
-      if (response.data.errors) {
+      const headers = { 'Content-Type': 'application/json' };
+      // const response = await callAPI(query, headers);
+      const response = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/login`, 'post', { ...formData }, headers)
+      const data = response?.data;
+
+      if (response?.data?.errors) {
         setModalMessage(`Login failed`)
         setShowModal(true);
         return;

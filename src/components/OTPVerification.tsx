@@ -3,7 +3,8 @@ import axios from 'axios';
 import Modal from './Model';
 import Spinner from './Spinner';
 import { useNavigate } from 'react-router-dom';
-import { callAPI } from '../api-call';
+import { callRestAPI } from '../api-call';
+import { VITE_AUTH_SVC_REST_URL } from '../common';
 
 interface OTPVerificationProps {
     userId?: string;
@@ -70,18 +71,19 @@ const OTPVerification: React.FC<OTPVerificationProps> = () => {
             setShowModal(true);
             return;
         }
-        const query = `mutation { AUTH_SVC_AUTH_SVC_otpVerify(input: {id: "${userId}", otp: ${parseInt(otpCode, 10)}}) { error message status }}`;
+        // const query = `mutation { AUTH_SVC_AUTH_SVC_otpVerify(input: {id: "${userId}", otp: ${parseInt(otpCode, 10)}}) { error message status }}`;
         setLoading(true);
         try {
             const headers = { 'Content-Type': 'application/json' }
-            const response = await callAPI(query, headers);
-            const data = response.data.data.AUTH_SVC_AUTH_SVC_otpVerify;
-            if (response.data.errors?.length) {
+            // const response = await callAPI(query, headers);
+            const response = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/otp-verification`, 'post', { id: userId, otp: parseInt(otpCode, 10) }, headers)
+            const data = response.data;
+            if (response?.data?.errors?.length) {
                 setModalMessage(`Verification failed:\n${response.data.errors.map((error: any) => error.message).join('\n')}`);
                 setShowModal(true);
                 return;
             }
-            if (data.status === 200) {
+            if (data?.status === 200) {
                 setModalMessage('OTP verified successfully!');
                 setShowModal(true);
                 setTimeout(() => navigate('/login'), 2000);

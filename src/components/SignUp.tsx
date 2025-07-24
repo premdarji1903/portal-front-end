@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Modal from "./Model";
 import { useNavigate } from "react-router-dom";
 import Spinner from "./Spinner";
-import { VITE_APP_URL } from "../common";
+import { VITE_AUTH_SVC_REST_URL } from "../common";
 import { FcGoogle } from "react-icons/fc";
 import { googleRedirectUrl } from "../common";
+import { callRestAPI } from "../api-call";
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -42,34 +42,35 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    const query = `
-    mutation {
-      AUTH_SVC_AUTH_SVC_registration(input: {
-        confirmPassword: "${formData.confirmPassword}",
-        contactNumber: "${formData.contactNumber}",
-        email: "${formData.email}",
-        firstName: "${formData.firstName}",
-        gender: "${formData.gender}",
-        lastName: "${formData.lastName}",
-        passWord: "${formData.passWord}",
-        userName: "${formData.userName}"
-      }) {
-        error
-        id
-        message
-        status
-      }
-    }
-  `;
+    //   const query = `
+    //   mutation {
+    //     AUTH_SVC_AUTH_SVC_registration(input: {
+    //       confirmPassword: "${formData.confirmPassword}",
+    //       contactNumber: "${formData.contactNumber}",
+    //       email: "${formData.email}",
+    //       firstName: "${formData.firstName}",
+    //       gender: "${formData.gender}",
+    //       lastName: "${formData.lastName}",
+    //       passWord: "${formData.passWord}",
+    //       userName: "${formData.userName}"
+    //     }) {
+    //       error
+    //       id
+    //       message
+    //       status
+    //     }
+    //   }
+    // `;
 
     try {
-      const response = await axios.post(VITE_APP_URL, { query }, {
-        headers: { "Content-Type": "application/json" },
-      });
+      // const response = await axios.post(VITE_APP_URL, { query }, {
+      //   headers: { "Content-Type": "application/json" },
+      // });
+      const response = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/registration`, 'post', { ...formData }, { "Content-Type": "application/json" },)
 
-      const data = response.data?.data?.AUTH_SVC_AUTH_SVC_registration;
+      const data = response.data;
 
-      if (response.data.errors?.length) {
+      if (response?.data.errors?.length) {
         setModalMessage(`Registration failed: ${response.data.errors.map((err: any) => err.message).join(", ")}`);
         setShowModal(true);
         return;
