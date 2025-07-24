@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Navigation from "./Navigation";
-import { callAPI } from "../api-call";
+import { callAPI, callRestAPI } from "../api-call";
 import Spinner from "./Spinner";
-import { VITE_APP_URL, VITE_USER_SVC_API_URL } from "../common";
+import { VITE_AUTH_SVC_REST_URL, VITE_USER_SVC_API_URL } from "../common";
 const Dashboard: React.FC = () => {
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -22,7 +22,6 @@ const Dashboard: React.FC = () => {
                 const searchParams = new URLSearchParams(window.location.search);
                 token = searchParams.get("token");
                 from = searchParams.get("from");
-
                 if (!token && from !== "Google") {
                     setError("Unauthorized: No session token found");
                     setLoading(false);
@@ -30,32 +29,31 @@ const Dashboard: React.FC = () => {
                 }
 
                 // Fetch session using token from query param
-                const sessionQuery = `
-                query {
-                    AUTH_SVC_AUTH_SVC_getSessionById(input: { id: "${token}" }) {
-                        error
-                        message
-                        status
-                        userData {
-                            email
-                            contactNumber
-                            firstName
-                            gender
-                            id
-                            lastName
-                            role
-                            userId
-                        }
-                    }
-                }
-            `;
+                // const sessionQuery = `
+                // query {
+                //     AUTH_SVC_AUTH_SVC_getSessionById(input: { id: "${token}" }) {
+                //         error
+                //         message
+                //         status
+                //         userData {
+                //             email
+                //             contactNumber
+                //             firstName
+                //             gender
+                //             id
+                //             lastName
+                //             role
+                //             userId
+                //         }
+                //     }
+                // }
+                // `;
 
                 try {
-                    const sessionRes = await callAPI(sessionQuery, {
-                        "Content-Type": "application/json",
-                    }, VITE_APP_URL);
-
-                    const userData = sessionRes?.data?.data?.AUTH_SVC_AUTH_SVC_getSessionById?.userData;
+                    const headers = { 'Content-Type': 'application/json' };
+                    // let response = await callAPI(sessionQuery, headers);
+                    const sessionRes = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/get-session-by-id/${token}`, 'get', headers)
+                    const userData = sessionRes?.data?.userData;
 
                     if (!userData) {
                         setError("Unauthorized: Invalid session token");
