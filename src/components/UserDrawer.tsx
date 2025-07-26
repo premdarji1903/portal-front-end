@@ -1,15 +1,14 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
-import { User } from "./UserList";
 import getLocalStorageData from "../common/get-local-storage";
-import { callAPI } from "../api-call";
+import { callRestAPI } from "../api-call";
 import Spinner from "./Spinner";
 import Modal from "./Model";
-import { VITE_USER_SVC_API_URL } from "../common";
+import { VITE_USER_SVC_REST_URL } from "../common";
 
 const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () => void }> = ({ userId, onClose, onUpdate }) => {
-    const [originalUser, setOriginalUser] = useState<User | null>(null);
-    const [editedUser, setEditedUser] = useState<User | null>(null);
+    const [originalUser, setOriginalUser] = useState<any | null>(null);
+    const [editedUser, setEditedUser] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false); // New state for update loading
     const [error, setError] = useState<string | null>(null);
@@ -32,31 +31,32 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
                 if (!isMounted) return;
                 setLoading(true);
 
-                const query = `
-                    query {
-                         USER_SVC_userService_getUserById(input: {id: "${userId}"}) {
-                            error
-                            message
-                            status
-                            user {
-                                contactNumber
-                                email
-                                firstName
-                                gender
-                                id
-                                userId
-                                role
-                                lastName
-                            }
-                        }
-                    }
-                `;
+                // const query = `
+                //     query {
+                //          USER_SVC_userService_getUserById(input: {id: "${userId}"}) {
+                //             error
+                //             message
+                //             status
+                //             user {
+                //                 contactNumber
+                //                 email
+                //                 firstName
+                //                 gender
+                //                 id
+                //                 userId
+                //                 role
+                //                 lastName
+                //             }
+                //         }
+                //     }
+                // `;
                 const headers = {
                     "Content-Type": "application/json",
                     "authorization": token, // Ensure token is available
                 };
-                const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
-                const userData = response?.data?.data?.USER_SVC_userService_getUserById?.user;
+                const response = await callRestAPI(`${VITE_USER_SVC_REST_URL}/get-user-by-id/${userId}`, 'get', {}, headers)
+
+                const userData = response?.data?.user;
 
                 if (userData && isMounted) {
                     setOriginalUser(userData);
@@ -87,52 +87,62 @@ const UserDrawer: React.FC<{ userId: string; onClose: () => void; onUpdate: () =
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setEditedUser((prevUser) => ({
+        setEditedUser((prevUser: any) => ({
             ...prevUser!,
             [name]: value,
         }));
     };
 
     const handleSave = async () => {
+
         if (!originalUser || !editedUser) return;
 
-        const updatedFields: any = {};
+        // Track fields that have changed
+        const updatedFields: Record<string, any> = {};
+
         Object.keys(originalUser).forEach((key) => {
-            if ((originalUser as any)[key] !== (editedUser as any)[key]) {
-                updatedFields[key] = (editedUser as any)[key];
+            const originalValue = originalUser[key];
+            const editedValue = editedUser[key];
+
+            // Deep comparison for objects/arrays if needed
+            if (originalValue !== editedValue) {
+                updatedFields[key] = editedValue;
             }
         });
-
-        if (Object.keys(updatedFields).length === 0) {
-            return;
-        }
-
         try {
             setIsUpdating(true); // Start update loading
 
-            const mutation = `
-                mutation {
-                    USER_SVC_userService_updateUser(
-                        input: {
-                            id: "${userId}",
-                            ${Object.entries(updatedFields)
-                    .map(([key, value]) => `${key}: "${value}"`)
-                    .join(",\n")}
-                        }
-                    ) {
-                        error
-                        message
-                        status
-                    }
-                }
-            `;
+            // const mutation = `
+            //     mutation {
+            //         USER_SVC_userService_updateUser(
+            //             input: {
+            //                 id: "${userId}",
+            //                 ${Object.entries(updatedFields)
+            //         .map(([key, value]) => `${key}: "${value}"`)
+            //         .join(",\n")}
+            //             }
+            //         ) {
+            //             error
+            //             message
+            //             status
+            //         }
+            //     }
+            // `;
             const headers = {
                 "Content-Type": "application/json",
                 "authorization": token,
             };
-
-            const response = await callAPI(mutation, headers, VITE_USER_SVC_API_URL);
-            if (response?.data?.data?.USER_SVC_userService_updateUser?.status === 201) {
+            const response = await callRestAPI(
+                `${VITE_USER_SVC_REST_URL}/update-user`,
+                'patch',
+                {
+                    id: userId,
+                    ...updatedFields
+                },
+                headers
+            );
+            // const response = await callAPI(mutation, headers, VITE_USER_SVC_API_URL);
+            if (response?.data?.status === 201) {
                 setModalMessage("User Updated");
                 setShowModal(true);
                 setOriginalUser(editedUser);

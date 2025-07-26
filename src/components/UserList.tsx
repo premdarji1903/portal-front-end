@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Navigation from "./Navigation";
-import { callAPI } from "../api-call";
+import { callRestAPI } from "../api-call";
 import UserDrawer from "./UserDrawer";
 import Spinner from "./Spinner";
 import { onMessage } from "firebase/messaging";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { messaging, VITE_USER_SVC_API_URL } from "../common";
+import { messaging, VITE_USER_SVC_REST_URL } from "../common";
 import getLocalStorageData from "../common/get-local-storage";
 import Modal from "./Model";
 import { useNavigate } from "react-router-dom";
@@ -101,35 +101,39 @@ const UserList: React.FC = () => {
     const fetchUsers = async (pageNumber = 1, pageSize = limit, retries = 3, search = searchTerm) => {
         setLoading(true);
 
-        const query = `
-        mutation {
-              USER_SVC_userService_userList(input: { page: ${pageNumber}, perPage: ${pageSize},search:"${search}" }) {
-                status
-                message
-                userDetail {
-                    count
-                    userData {
-                        id
-                        firstName
-                        lastName
-                        email
-                        role
-                        contactNumber
-                        gender
-                    }
-                }
-            }
-        }
-    `;
+        //     const query = `
+        //     mutation {
+        //           USER_SVC_userService_userList(input: { page: ${pageNumber}, perPage: ${pageSize},search:"${search}" }) {
+        //             status
+        //             message
+        //             userDetail {
+        //                 count
+        //                 userData {
+        //                     id
+        //                     firstName
+        //                     lastName
+        //                     email
+        //                     role
+        //                     contactNumber
+        //                     gender
+        //                 }
+        //             }
+        //         }
+        //     }
+        // `;
         try {
-            const response = await callAPI(query, { "Content-Type": "application/json", "authorization": token }, VITE_USER_SVC_API_URL);
-            if (response.data?.data?.USER_SVC_userService_userList
-                ?.status === 200) {
-                const userData = response?.data?.data?.USER_SVC_userService_userList
-                    ?.userDetail;
+            const response = await callRestAPI(`${VITE_USER_SVC_REST_URL}/user-list?page=${pageNumber}&perPage=${pageSize}&search=${search}`, 'get', {},
+                {
+                    "Content-Type": "application/json",
+                    "authorization": token,
+                },
+            )
+
+            // const response = await callAPI(query, { "Content-Type": "application/json", "authorization": token }, VITE_USER_SVC_API_URL);
+            if (response.data?.status === 200) {
+                const userData = response?.data?.userDetail;
                 const newUsers = userData?.userData ?? []
-                const totalUsersCount = response?.data?.data?.USER_SVC_userService_userList
-                    .userDetail?.count;
+                const totalUsersCount = response?.data?.userDetail?.count;
                 setUsers(newUsers);
                 setTotalPages(Math.ceil(totalUsersCount / pageSize));
             } else {
@@ -182,15 +186,15 @@ const UserList: React.FC = () => {
         if (!userId) return;
 
         setLoading(true);
-        const query = `
-            mutation {
-                 USER_SVC_userService_deleteUser(input: { id: "${userId}" }) {
-                    error
-                    message
-                    status
-                }
-            }
-        `;
+        // const query = `
+        //     mutation {
+        //          USER_SVC_userService_deleteUser(input: { id: "${userId}" }) {
+        //             error
+        //             message
+        //             status
+        //         }
+        //     }
+        // `;
 
         const token: string | null = getLocalStorageData?.id;
 
@@ -205,8 +209,11 @@ const UserList: React.FC = () => {
         };
 
         try {
-            const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
-            if (response.data?.data?.USER_SVC_userService_deleteUser?.status === 200) {
+            const response = await callRestAPI(`${VITE_USER_SVC_REST_URL}/delete-user`, 'post', { id: userId },
+                headers
+            )
+            // const response = await callAPI(query, headers, VITE_USER_SVC_API_URL);
+            if (response.data?.status === 200) {
                 setUsers(users.filter((u) => u.id !== userId));
             }
         } catch (error) {

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Navigation from "./Navigation";
-import { callAPI, callRestAPI } from "../api-call";
+import { callRestAPI } from "../api-call";
 import Spinner from "./Spinner";
-import { VITE_AUTH_SVC_REST_URL, VITE_USER_SVC_API_URL } from "../common";
+import { VITE_AUTH_SVC_REST_URL, VITE_USER_SVC_REST_URL } from "../common";
 const Dashboard: React.FC = () => {
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -70,34 +70,38 @@ const Dashboard: React.FC = () => {
                 }
             }
 
-            // Now fetch full user details
-            const userQuery = `
-            query {
-                USER_SVC_userService_getUserById(input: { id: "${userId}" }) {
-                    error
-                    message
-                    status
-                    user {
-                        contactNumber
-                        email
-                        gender
-                        id
-                        firstName
-                        lastName
-                        role
-                        userId
-                    }
-                }
-            }
-        `;
+            //  let response = await callRestAPI(`${VITE_AUTH_SVC_REST_URL}/get-session-by-id/${token}`, 'get', headers)
+
+            //     // Now fetch full user details
+            //     const userQuery = `
+            //     query {
+            //         USER_SVC_userService_getUserById(input: { id: "${userId}" }) {
+            //             error
+            //             message
+            //             status
+            //             user {
+            //                 contactNumber
+            //                 email
+            //                 gender
+            //                 id
+            //                 firstName
+            //                 lastName
+            //                 role
+            //                 userId
+            //             }
+            //         }
+            //     }
+            // `;
 
             try {
-                const userResponse = await callAPI(userQuery, {
-                    "Content-Type": "application/json",
-                    "authorization": token,
-                }, VITE_USER_SVC_API_URL);
+                const userResponse = await callRestAPI(`${VITE_USER_SVC_REST_URL}/get-user-by-id/${userId}`, 'get', '',
+                    {
+                        "Content-Type": "application/json",
+                        "authorization": token,
+                    },
+                )
 
-                const user = userResponse?.data?.data?.USER_SVC_userService_getUserById?.user;
+                const user = userResponse?.data?.user;
 
                 if (!user) {
                     setError("User not found.");

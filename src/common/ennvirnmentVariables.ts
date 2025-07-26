@@ -10,5 +10,5 @@ export const VITE_VAPID_KEY = import.meta.env.VITE_VAPID_KEY
 export const VITE_USER_SVC_API_URL = import.meta.env.VITE_USER_SVC_API_URL
 export const VITE_GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 export const VITE_GOOGLE_CALLBACK_URL = import.meta.env.VITE_GOOGLE_CALLBACK_URL
-export const VITE_AUTH_SVC_REST_URL =import.meta.env.VITE_AUTH_SVC_REST_URL
-
+export const VITE_AUTH_SVC_REST_URL = import.meta.env.VITE_AUTH_SVC_REST_URL
+export const VITE_USER_SVC_REST_URL = import.meta.env.VITE_USER_SVC_REST_URL
